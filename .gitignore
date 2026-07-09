@@ -1,4 +1,5 @@
 # Dependencies
+**/node_modules/
 node_modules/
 .pnp
 .pnp.js
@@ -6,6 +7,10 @@ node_modules/
 # Next.js build output
 .next/
 out/
+
+# Production build outputs
+dist/
+build/
 
 # Production build logs
 npm-debug.log*
