@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ApplicationStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -27,9 +27,17 @@ async function main() {
     { title: 'Backend Engineer', company: 'CloudScale', source: 'LinkedIn' },
   ];
 
-  const statuses = ['applied', 'screening', 'interview', 'offer', 'hired', 'rejected'];
+  // Using the exact typed Enum array from your fresh schema
+  const statuses: ApplicationStatus[] = [
+    ApplicationStatus.applied,
+    ApplicationStatus.screening,
+    ApplicationStatus.interview,
+    ApplicationStatus.offer,
+    ApplicationStatus.hired,
+    ApplicationStatus.rejected,
+  ];
 
-  console.log('Seeding database with candidates and applications...');
+  console.log('Seeding PostgreSQL database with candidates and applications...');
 
   for (const c of sampleCandidates) {
     const candidate = await prisma.candidate.create({

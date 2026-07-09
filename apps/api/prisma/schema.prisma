@@ -1,14 +1,23 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
+enum ApplicationStatus {
+  applied
+  screening
+  interview
+  offer
+  hired
+  rejected
+}
+
 model Candidate {
-  id           String        @id @default(uuid())
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name         String
   email        String        @unique
   phone        String?
@@ -26,19 +35,19 @@ model Candidate {
 }
 
 model Application {
-  id                 String    @id @default(uuid())
-  candidate_id       String
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  candidate_id       String            @db.Uuid
   job_title          String
   company            String
-  status             String    // applied, screening, interview, offer, hired, rejected
+  status             ApplicationStatus // Enforces status validation at the database layer
   applied_at         DateTime
   salary_expectation Int?
   source             String?
   notes              String?
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @updatedAt
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
 
-  candidate          Candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  candidate          Candidate         @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
   @@index([job_title])
   @@index([company])
