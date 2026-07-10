@@ -12,15 +12,17 @@ const server = fastify({ logger: true });
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
 
-// Register CORS middleware
+// Register CORS middleware explicitly for your frontend port
 server.register(cors, {
-  origin: true, // Allows requests from your web frontend workspace
+  origin: ['http://localhost:3001'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true,
 });
 
 // Register API Routes
-server.register(candidateRoutes);
+server.register(candidateRoutes, { prefix: '/api' });
 
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3002;
 
 const start = async () => {
   try {

@@ -28,7 +28,8 @@ export default function Dashboard() {
   const { data: metrics, isLoading, isError, refetch } = useQuery<DashboardMetrics>({
     queryKey: ['dashboardMetrics'],
     queryFn: async () => {
-      const res = await fetch('http://localhost:3001/api/dashboard');
+      // FIXED: Added the mandatory /api prefix to match your Fastify route setup
+      const res = await fetch('http://localhost:3002/api/dashboard');
       if (!res.ok) throw new Error('Network error pulling metrics');
       return res.json();
     },

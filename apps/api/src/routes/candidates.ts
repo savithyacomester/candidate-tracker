@@ -12,7 +12,7 @@ export async function candidateRoutes(fastify: FastifyInstance) {
   // 1. GET ALL CANDIDATES (With Pagination, Search & Soft-Delete Filter)
   // ==========================================
   server.get(
-    '/api/candidates',
+    '/candidates',
     {
       schema: {
         querystring: z.object({
@@ -70,7 +70,7 @@ export async function candidateRoutes(fastify: FastifyInstance) {
   // 2. GET ALL APPLICATIONS (Cross-Entity Search Server JOIN - Section 4.3)
   // ==========================================
   server.get(
-    '/api/applications',
+    '/applications',
     {
       schema: {
         querystring: z.object({
@@ -141,7 +141,7 @@ export async function candidateRoutes(fastify: FastifyInstance) {
   // 3. POST NEW CANDIDATE (With 409 Conflict check)
   // ==========================================
   server.post(
-    '/api/candidates',
+    '/candidates',
     {
       schema: {
         body: z.object({
@@ -175,7 +175,7 @@ export async function candidateRoutes(fastify: FastifyInstance) {
   // 4. PATCH APPLICATION STATUS
   // ==========================================
   server.patch(
-    '/api/applications/:id/status',
+    '/applications/:id/status',
     {
       schema: {
         params: z.object({
@@ -202,10 +202,10 @@ export async function candidateRoutes(fastify: FastifyInstance) {
     }
   );
 
-// ==========================================
+  // ==========================================
   // 5. GET DASHBOARD METRICS (Database Aggregation - Section 3)
   // ==========================================
-  server.get('/api/dashboard', async (request, reply) => {
+  server.get('/dashboard', async (request, reply) => {
     // Determine the boundary timestamp for the current month calculation
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
