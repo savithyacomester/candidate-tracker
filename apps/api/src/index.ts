@@ -12,9 +12,9 @@ const server = fastify({ logger: true });
 server.setValidatorCompiler(validatorCompiler);
 server.setSerializerCompiler(serializerCompiler);
 
-// Register CORS middleware explicitly for your frontend port
+// Register CORS middleware explicitly for your frontend port (Updated to 5173)
 server.register(cors, {
-  origin: ['http://localhost:3001'],
+  origin: ['http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 });
@@ -22,7 +22,8 @@ server.register(cors, {
 // Register API Routes
 server.register(candidateRoutes, { prefix: '/api' });
 
-const PORT = Number(process.env.PORT) || 3002;
+// Updated default fallback to 3001 to align with the specification brief
+const PORT = Number(process.env.PORT) || 3001;
 
 const start = async () => {
   try {
