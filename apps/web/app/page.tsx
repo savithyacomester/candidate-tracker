@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link'; // Added for compliant SPA navigation strings
 
 interface Application {
   id: string;
@@ -28,7 +29,6 @@ export default function Dashboard() {
   const { data: metrics, isLoading, isError, refetch } = useQuery<DashboardMetrics>({
     queryKey: ['dashboardMetrics'],
     queryFn: async () => {
-      // FIXED: Added the mandatory /api prefix to match your Fastify route setup
       const res = await fetch('http://localhost:3002/api/dashboard');
       if (!res.ok) throw new Error('Network error pulling metrics');
       return res.json();
@@ -84,9 +84,27 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-10">
-      <header className="max-w-7xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Talent Dashboard</h1>
-        <p className="text-slate-500 mt-1">Real-time recruitment health metrics and tracking aggregations.</p>
+      
+      {/* Enforce Section 5.3 Navbar controls */}
+      <header className="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Talent Dashboard</h1>
+          <p className="text-slate-500 mt-1">Real-time recruitment health metrics and tracking aggregations.</p>
+        </div>
+        <div className="flex gap-3">
+          <Link
+            href="/candidates"
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-xs hover:bg-slate-50 transition"
+          >
+            Browse Talent Pool
+          </Link>
+          <Link
+            href="/applications"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-xs hover:bg-blue-700 transition"
+          >
+            Applications Explorer
+          </Link>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto space-y-8">

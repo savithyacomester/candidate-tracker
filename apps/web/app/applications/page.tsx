@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
 
 interface Application {
   id: string;
+  candidate_id: string; // Added to handle routing parameters
   job_title: string;
   company: string;
   status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
@@ -12,6 +14,7 @@ interface Application {
   notes?: string;
   applied_at: string;
   candidate: {
+    id: string;
     name: string;
     email: string;
     location?: string;
@@ -34,7 +37,7 @@ export default function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  // Implement client-side debouncing to protect backend throughput
+  // Implement client-side debouncing to protect backend throughput (Section 4.3 Requirement)
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -44,7 +47,7 @@ export default function ApplicationsPage() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // Fetch from the multi-field cross-entity search endpoint
+  // Fetch from the multi-field cross-entity search endpoint (Targeting backend port 3002)
   const { data, isLoading, isError } = useQuery<ApplicationsResponse>({
     queryKey: ['applications', debouncedSearch, statusFilter, page],
     queryFn: async () => {
@@ -55,7 +58,7 @@ export default function ApplicationsPage() {
       if (debouncedSearch) queryParams.append('search', debouncedSearch);
       if (statusFilter) queryParams.append('status', statusFilter);
 
-      const res = await fetch(`http://localhost:3001/api/applications?${queryParams.toString()}`);
+      const res = await fetch(`http://localhost:3002/api/applications?${queryParams.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch search results');
       return res.json();
     },
@@ -81,9 +84,9 @@ export default function ApplicationsPage() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Applications Explorer</h1>
           <p className="text-slate-500 mt-1">Cross-entity server database search engine.</p>
         </div>
-        <a href="/" className="inline-flex items-center text-sm font-medium text-blue-600 hover:underline">
+        <Link href="/" className="inline-flex items-center text-sm font-medium text-blue-600 hover:underline">
           ← Back to Metrics Dashboard
-        </a>
+        </Link>
       </header>
 
       <main className="max-w-7xl mx-auto space-y-6">
@@ -148,8 +151,14 @@ export default function ApplicationsPage() {
                         <div className="text-slate-500 text-xs">{app.company}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-medium text-slate-800">{app.candidate.name}</div>
-                        <div className="text-slate-400 text-xs">{app.candidate.email}</div>
+                        {/* Enforces Section 5.3: Component links down directly to the candidate detail subview */}
+                        <Link 
+                          href={`/candidates/${app.candidate_id}`}
+                          className="font-medium text-blue-600 hover:underline block"
+                        >
+                          {app.candidate?.name || 'Unknown Candidate'}
+                        </Link>
+                        <div className="text-slate-400 text-xs">{app.candidate?.email}</div>
                       </td>
                       <td className="px-6 py-4 text-slate-600">{app.source}</td>
                       <td className="px-6 py-4">
