@@ -16,12 +16,9 @@ This project is structured as a turborepo workspace split into isolated frontend
 
 ## 🚀 Local Quickstart Setup
 
-### 1. Environment Configurations
-Ensure your local database layer connections are configured. Duplicate the stub environment file inside `apps/api/.env`:
-
-```env
-PORT=3002
-DATABASE_URL="postgresql://<user>:<password>@localhost:5432/candidate_tracker?schema=public"
+### 1. Prerequisites
+* Node.js (v18+)
+* Docker & Docker Compose
 
 2. Execution Commands
 From the root directory of the monorepo, run the following steps to initialize the environment:
