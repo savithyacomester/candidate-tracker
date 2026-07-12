@@ -33,18 +33,16 @@ From the root directory of the monorepo, run the following steps to initialize t
 
 * Start API (port 3001): npm run dev --workspace=apps/api
 
-* Start Web (port 5173):
-npm run dev --workspace=apps/web
+* Start Web (port 5173): npm run dev --workspace=apps/web
 
-* Run tests:
-npm test
+* Run tests: npm test
 
 🛠️ Key Implementation Details
 * Cross-Entity Search: The Applications list implements a server-side SQL JOIN. This allows users to search across Application fields (job title, company) and parent Candidate fields (name, email) in a single query.
 
 * Data Integrity: Every database operation is performed through Prisma, with migrations managing schema changes. Soft deletes are implemented on the Candidate entity using a deleted_at column, which is strictly filtered in all query operations.
 
-Error Handling: All API errors are routed through a centralized setErrorHandler in Fastify to ensure consistent client-side responses.
+* Error Handling: All API errors are routed through a centralized setErrorHandler in Fastify to ensure consistent client-side responses.
 
 📝 Future Improvements & Notes
 What I would finish next:
