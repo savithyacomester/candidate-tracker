@@ -1,13 +1,13 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link'; // Added for compliant SPA navigation strings
+import Link from 'next/link';
+import { useDashboardMetrics } from '../src/hooks/useDashboardMetrics';
 
 interface Application {
   id: string;
   job_title: string;
   company: string;
-  status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+  status: 'applied' | 'screening' | 'interview' | 'hired' | 'rejected';
   applied_at: string;
   candidate: {
     name: string;
@@ -15,32 +15,15 @@ interface Application {
   };
 }
 
-interface DashboardMetrics {
-  totalCandidates: number;
-  totalApplications: number;
-  applicationsByStatus: { status: string; count: number }[];
-  hiredThisMonth: number;
-  rejectionRate: number;
-  latestApplications: Application[];
-}
-
 export default function Dashboard() {
-  // Enforce Section 5.1: Use TanStack React Query for managing server state
-  const { data: metrics, isLoading, isError, refetch } = useQuery<DashboardMetrics>({
-    queryKey: ['dashboardMetrics'],
-    queryFn: async () => {
-      const res = await fetch('http://localhost:3002/api/dashboard');
-      if (!res.ok) throw new Error('Network error pulling metrics');
-      return res.json();
-    },
-  });
+  // Use your global state query hook directly
+  const { data: metrics, isLoading, isError, refetch } = useDashboardMetrics();
 
-  // Helper styling badges for Application Statuses
+  // Helper styling badges matching your layout aesthetics
   const getStatusBadgeClass = (status: Application['status']) => {
     const base = "px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize ";
     switch (status) {
       case 'hired': return base + "bg-green-100 text-green-800 border border-green-200";
-      case 'offer': return base + "bg-emerald-100 text-emerald-800 border border-emerald-200";
       case 'interview': return base + "bg-blue-100 text-blue-800 border border-blue-200";
       case 'screening': return base + "bg-purple-100 text-purple-800 border border-purple-200";
       case 'applied': return base + "bg-gray-100 text-gray-800 border border-gray-200";
@@ -49,7 +32,7 @@ export default function Dashboard() {
     }
   };
 
-  // Section 5.2 Loading UI State handling
+  // Loading state handling with custom spinner
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -61,13 +44,13 @@ export default function Dashboard() {
     );
   }
 
-  // Section 5.2 Error UI State handling with Retry function
+  // Error fallback state 
   if (isError || !metrics) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center max-w-md">
           <p className="text-red-600 font-semibold text-lg mb-2">Failed to load pipeline summary</p>
-          <p className="text-slate-500 text-sm mb-6">The API engine was unreachable. Verify your backend Fastify connection stack is up.</p>
+          <p className="text-slate-500 text-sm mb-6">The API engine was unreachable. Verify your backend Fastify connection stack is active.</p>
           <button 
             onClick={() => refetch()} 
             className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -79,13 +62,20 @@ export default function Dashboard() {
     );
   }
 
-  // Calculate high value for simple status bar scaling calculations
-  const maxCount = Math.max(...metrics.applicationsByStatus.map(s => s.count), 1);
+  // Transform metrics object into a local iterable status breakdown array
+  const statusBreakdown = [
+    { status: 'applied', count: metrics.applied ?? 0 },
+    { status: 'screening', count: metrics.screening ?? 0 },
+    { status: 'interview', count: metrics.interview ?? 0 },
+    { status: 'hired', count: metrics.hired ?? 0 },
+    { status: 'rejected', count: metrics.rejected ?? 0 },
+  ];
+
+  const maxCount = Math.max(...statusBreakdown.map(s => s.count), 1);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-10">
       
-      {/* Enforce Section 5.3 Navbar controls */}
       <header className="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Talent Dashboard</h1>
@@ -94,54 +84,44 @@ export default function Dashboard() {
         <div className="flex gap-3">
           <Link
             href="/candidates"
-            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-xs hover:bg-slate-50 transition"
+            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg shadow-sm hover:bg-slate-50 transition"
           >
             Browse Talent Pool
-          </Link>
-          <Link
-            href="/applications"
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-xs hover:bg-blue-700 transition"
-          >
-            Applications Explorer
           </Link>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto space-y-8">
-        {/* ==========================================
-            SECTION 3.1: SIX REQUIRED KPI CARDS
-           ========================================== */}
+        {/* KPI Cards Summary Section */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Candidates</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{metrics.totalCandidates}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Screening</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{metrics.screening ?? 0}</p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Applications</p>
-            <p className="text-3xl font-bold text-slate-900 mt-2">{metrics.totalApplications}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Interviews</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{metrics.interview ?? 0}</p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hired This Month</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">{metrics.hiredThisMonth}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Hired</p>
+            <p className="text-3xl font-bold text-green-600 mt-2">{metrics.hired ?? 0}</p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rejection Rate</p>
-            <p className="text-3xl font-bold text-red-500 mt-2">{metrics.rejectionRate}%</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Rejected</p>
+            <p className="text-3xl font-bold text-red-500 mt-2">{metrics.rejected ?? 0}</p>
           </div>
           <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 col-span-2 lg:col-span-1">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Status Pools</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">{metrics.applicationsByStatus.length}</p>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Pipeline</p>
+            <p className="text-3xl font-bold text-blue-600 mt-2">{metrics.totalCandidates ?? 0}</p>
           </div>
         </div>
 
-        {/* ==========================================
-            SECTION 3.2: RESPONSIVE APPLICATION PIPELINE CHART
-           ========================================== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 lg:col-span-1">
+        {/* Application Pipeline Chart Breakdown */}
+        <div className="grid grid-cols-1 gap-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
             <h2 className="text-base font-bold text-slate-800 mb-6 uppercase tracking-wider">Applications By Status</h2>
             <div className="space-y-4">
-              {metrics.applicationsByStatus.map((item) => (
+              {statusBreakdown.map((item) => (
                 <div key={item.status} className="space-y-1.5">
                   <div className="flex justify-between text-xs font-medium">
                     <span className="capitalize text-slate-600">{item.status}</span>
@@ -155,41 +135,6 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              {metrics.applicationsByStatus.length === 0 && (
-                <p className="text-slate-400 text-sm italic">No application pipelines active.</p>
-              )}
-            </div>
-          </div>
-
-          {/* ==========================================
-              SECTION 3.1: LATEST ACTIVITY PIPELINE FEED
-             ========================================== */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 lg:col-span-2 overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100">
-              <h2 className="text-base font-bold text-slate-800 uppercase tracking-wider">Latest Application Activities</h2>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {metrics.latestApplications.map((app) => (
-                <div key={app.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors text-sm">
-                  <div>
-                    <div className="font-semibold text-slate-800">{app.job_title}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">
-                      {app.company} • Applied by <span className="font-medium text-slate-600">{app.candidate.name}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-400 hidden sm:inline">
-                      {new Date(app.applied_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </span>
-                    <span className={getStatusBadgeClass(app.status)}>
-                      {app.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {metrics.latestApplications.length === 0 && (
-                <div className="p-8 text-center text-slate-400 italic">No recent applications registered.</div>
-              )}
             </div>
           </div>
         </div>

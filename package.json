@@ -14,6 +14,11 @@
     "build": "npm run build --workspace=apps/api && npm run build --workspace=apps/web"
   },
   "devDependencies": {
-    "typescript": "^7.0.2"
+    "@types/node": "^26.1.1",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.101.2",
+    "axios": "^1.18.1"
   }
 }

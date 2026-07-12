@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 
 interface Candidate {
   id: string;
@@ -31,7 +32,6 @@ export default function CandidatesPage() {
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Form Field State Definitions
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,7 +42,6 @@ export default function CandidatesPage() {
   });
   const [formError, setFormError] = useState('');
 
-  // 1. Fetch Candidates List via React Query (Triggers automatically when page or search modifications occur)
   const { data, isLoading, isError } = useQuery<ApiResponse>({
     queryKey: ['candidates', search, page],
     queryFn: async () => {
@@ -51,7 +50,7 @@ export default function CandidatesPage() {
         limit: '10',
         ...(search && { search }),
       });
-      const response = await fetch(`http://localhost:3002/api/candidates?${queryParams}`);
+      const response = await fetch(`http://localhost:3001/api/candidates?${queryParams}`);
       if (!response.ok) {
         throw new Error('Failed to fetch candidate profiles.');
       }
@@ -59,10 +58,9 @@ export default function CandidatesPage() {
     },
   });
 
-  // 2. Handle New Candidate Generation Mutation with 409 Conflict Parsing
   const createMutation = useMutation({
     mutationFn: async (newCandidate: typeof formData) => {
-      const response = await fetch('http://localhost:3002/api/candidates', {
+      const response = await fetch('http://localhost:3001/api/candidates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newCandidate),
@@ -116,7 +114,6 @@ export default function CandidatesPage() {
         </button>
       </div>
 
-      {/* Search Input Bar (Section 4.1 Requirement) */}
       <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <input
           type="text"
@@ -124,13 +121,12 @@ export default function CandidatesPage() {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPage(1); // Reset layout back to primary index page during typing cycles
+            setPage(1);
           }}
           className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         />
       </div>
 
-      {/* Grid List View Display Handler */}
       {isLoading ? (
         <div className="text-center py-12 text-slate-500 text-sm">Compiling and fetching active talent entries...</div>
       ) : isError ? (
@@ -155,7 +151,14 @@ export default function CandidatesPage() {
               ) : (
                 data?.data.map((candidate) => (
                   <tr key={candidate.id} className="hover:bg-slate-50/70 transition">
-                    <td className="p-4 font-medium text-slate-900">{candidate.name}</td>
+                    <td className="p-4">
+                      <Link 
+                        href={`/candidates/${candidate.id}`} 
+                        className="font-semibold text-indigo-600 hover:text-indigo-900 hover:underline transition"
+                      >
+                        {candidate.name}
+                      </Link>
+                    </td>
                     <td className="p-4">
                       <div className="flex flex-col">
                         <span>{candidate.email}</span>
@@ -188,7 +191,6 @@ export default function CandidatesPage() {
             </tbody>
           </table>
 
-          {/* Pagination Controllers Block */}
           {data && data.meta.totalPages > 1 && (
             <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
               <span className="text-xs text-slate-500">
@@ -215,9 +217,8 @@ export default function CandidatesPage() {
         </div>
       )}
 
-      {/* Creation Modal Overlay Form Element */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-xl border w-full max-w-lg p-6 space-y-4 relative">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Create Candidate Profile</h3>

@@ -1,15 +1,18 @@
-'use client';
+import Providers from './providers';
+import './globals.css'; // Make sure this matches your layout's CSS import path
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
-
-export default function Providers({ children }: { children: React.ReactNode }) {
-  // We use useState to ensure the QueryClient is only initialized once per session
-  const [queryClient] = useState(() => new QueryClient());
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <html lang="en">
+      <body>
+        <Providers>
+          {children}
+        </Providers>
+      </body>
+    </html>
   );
 }

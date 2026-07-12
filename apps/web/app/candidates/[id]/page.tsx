@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -28,12 +28,12 @@ interface CandidateDetails {
 export default function CandidateDetailPage() {
   const params = useParams();
   const id = params?.id as string;
+  const queryClient = useQueryClient();
 
-  // Fetch complete candidate history profile using TanStack React Query (Section 5.1 & 5.3)
   const { data: candidate, isLoading, isError, refetch } = useQuery<CandidateDetails>({
     queryKey: ['candidateDetails', id],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:3002/api/candidates/${id}`);
+      const res = await fetch(`http://localhost:3001/api/candidates/${id}`);
       if (!res.ok) {
         throw new Error('Failed to resolve candidate record metadata.');
       }
@@ -41,6 +41,28 @@ export default function CandidateDetailPage() {
     },
     enabled: !!id,
   });
+
+  // Mutation to handle real-time status adjustments
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ applicationId, newStatus }: { applicationId: string; newStatus: string }) => {
+      const res = await fetch(`http://localhost:3001/api/applications/${applicationId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to update application pipeline status.');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['candidateDetails', id] });
+    },
+  });
+
+  const handleStatusChange = (applicationId: string, newStatus: string) => {
+    updateStatusMutation.mutate({ applicationId, newStatus });
+  };
 
   const getStatusBadgeClass = (status: Application['status']) => {
     const base = "px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide capitalize ";
@@ -83,15 +105,13 @@ export default function CandidateDetailPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-10">
       <div className="max-w-4xl mx-auto space-y-6">
         
-        {/* Breadcrumb back links */}
         <div className="flex items-center justify-between">
-          <Link href="/applications" className="text-sm font-medium text-blue-600 hover:underline">
-            ← Back to Applications
+          <Link href="/candidates" className="text-sm font-medium text-blue-600 hover:underline">
+            ← Back to Talent Pool
           </Link>
           <span className="text-xs text-slate-400 font-mono">ID: {candidate.id}</span>
         </div>
 
-        {/* 1. Profile Core Info Block */}
         <section className="bg-white p-6 rounded-xl shadow-xs border border-slate-200 space-y-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">{candidate.name}</h1>
@@ -140,7 +160,6 @@ export default function CandidateDetailPage() {
           )}
         </section>
 
-        {/* 2. Candidate Contextual Application History Sub-Grid (Section 5.3) */}
         <section className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100">
             <h2 className="text-base font-bold text-slate-800 uppercase tracking-wider">Historical Submissions</h2>
@@ -180,9 +199,24 @@ export default function CandidateDetailPage() {
                         })}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={getStatusBadgeClass(app.status)}>
-                          {app.status}
-                        </span>
+                        <div className="flex items-center justify-end gap-3">
+                          <span className={getStatusBadgeClass(app.status)}>
+                            {app.status}
+                          </span>
+                          <select
+                            value={app.status}
+                            disabled={updateStatusMutation.isPending}
+                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                            className="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-md p-1 focus:outline-none focus:ring-1 focus:ring-blue-500 transition disabled:opacity-40"
+                          >
+                            <option value="applied">Applied</option>
+                            <option value="screening">Screening</option>
+                            <option value="interview">Interview</option>
+                            <option value="offer">Offer</option>
+                            <option value="hired">Hired</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                        </div>
                       </td>
                     </tr>
                   ))
