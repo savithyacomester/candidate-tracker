@@ -47,6 +47,14 @@ Data Integrity: Every database operation is performed through Prisma, with migra
 Error Handling: All API errors are routed through a centralized setErrorHandler in Fastify to ensure consistent client-side responses.
 
 📝 Future Improvements & Notes
-What I would finish next: [e.g., Adding cursor-based pagination or a Kanban board view.]
+What I would finish next:
+**`UI Enhancements`**: Implement a Kanban board view for the application status to improve pipeline visualization.
+**`Performance`**: Migrate from offset-based pagination to cursor-based pagination for the applications table.
+**`Testing`**: Add more granular frontend unit tests using React Testing Library to increase test coverage.
 
-Known limitations: [e.g., Mention any features not fully implemented or areas where manual testing was prioritized.].
+Known limitations: While the application is architected to meet all requirements, the following runtime verifications remain to be fully confirmed upon local deployment:
+**`Test Suite Execution`**: Full verification that npm test passes in the local environment.
+**`Type Safety`**: Confirmation that npx tsc --noEmit returns zero errors across both apps/api and apps/web workspaces.
+**`Frontend Behavior`**: End-to-end verification of all frontend page interactions and state transitions (loading, empty, error, delete-confirm) when running locally.
+**`Data Seeding`**: Final validation that the seed script successfully inserts the required minimum of 10 candidates and their respective applications into the database.
+
